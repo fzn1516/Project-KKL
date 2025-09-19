@@ -9,6 +9,7 @@ function goLevel(id) {
   localStorage.setItem('levelId', String(id)); // konversi ke string agar aman
 
   // Redirect ke halaman ikon
-  const baseUrl = 'https://fzn1516.github.io/Project-KKL-main-/bangun-ikon/index.html';
+  const baseUrl = 'https://fzn1516.github.io/Project-KKL-main-/';
   window.location.href = `${baseUrl}?level=${encodeURIComponent(id)}`;
 }
+
