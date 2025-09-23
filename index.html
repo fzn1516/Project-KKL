@@ -1,39 +1,352 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bangun Ikon Kota Metro</title>
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangun Ikon Kota Metro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ==== STYLE GAME PAGE ==== */
+    .outline {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      border: 2px dashed #e6eef8;
+      border-radius: 8px;
+      margin: 0 auto;
+    }
+    .outline img {
+      width: 100%;
+      height: 100%;
+      opacity: 0.25;
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .slot {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border: 2px dashed #aaa;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .slot .piece {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+    .piece {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+      cursor: grab;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+    .msg { margin-top: 10px; padding: 10px; border-radius: 8px; }
+    .success { background: #ecfdf5; color: #065f46; }
+    .error { background: #fff1f2; color: #7f1d1d; }
+  </style>
 </head>
-<body>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
 
-<header>
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-    <rect width="24" height="24" rx="6" fill="#eef2ff"/>
-    <path d="M6 12h12M12 6v12" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/>
-  </svg>
-  <div>
-    <h1>Bangun Ikon Kota Metro</h1>
-    <div class="hint">Game edukasi: volume & luas permukaan (minimalis, web)</div>
-  </div>
-</header>
+  <!-- ==== HEADER ==== -->
+  <header class="bg-white border-b border-gray-200 shadow-sm py-4 px-6 flex items-center gap-3">
+    <div class="bg-blue-100 p-2 rounded-lg">
+      <svg class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <rect width="20" height="20" x="2" y="2" rx="4" fill="none" stroke-width="1.5"/>
+        <path d="M8 12h8M12 8v8" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="text-xl font-semibold text-gray-900">Bangun Ikon Kota Metro</h1>
+      <p class="text-sm text-gray-600">Game edukasi: volume & luas permukaan</p>
+    </div>
+  </header>
 
-<div id="app">
-  <div class="container">
-    <h1>Pilih Ikon Kota Metro</h1>
-    <div class="level" onclick="goLevel(1)">Menara Air</div>
-    <div class="level" onclick="goLevel(2)">Level 2</div>
-  </div>
-</div>
-<footer>
-  Versi akhir • Pengembang: Tim Mahasiswa • Gunakan untuk keperluan KKLP
-</footer>
+  <!-- ==== HOME PAGE ==== -->
+  <main id="homePage" class="flex-1 flex items-center justify-center p-6">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Pilih Ikon Kota Metro</h2>
+        <p class="text-gray-600">Pilih ikon yang ingin Anda bangun dan pelajari perhitungannya</p>
+      </div>
+      <div id="icon-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+  </main>
 
+  <!-- ==== LEVEL PAGE ==== -->
+  <main id="levelPage" class="flex-1 flex items-center justify-center p-6 hidden">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-xl text-center">
+      <img id="levelImage" class="w-full h-96 object-cover rounded-lg mb-4" src="" alt="Ikon"/>
+      <h2 id="levelTitle" class="text-2xl font-bold text-gray-900 mb-2"></h2>
+      <p id="levelDesc" class="text-gray-600 mb-4"></p>
+      <div class="flex justify-center gap-3">
+        <button id="backBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">← Kembali</button>
+        <button id="startGameBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Mulai Game →</button>
+      </div> 
+    </div>
+  </main>
 
-<script src="js/script.js"></script>
+  <!-- ==== GAME PAGE ==== -->
+  <main id="gamePage" class="flex-1 flex items-center justify-center p-6 hidden">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-5xl">
+
+      <!-- ==== BAGIAN 1: ICON UTUH ==== -->
+      <div id="iconView" class="flex flex-col items-center mb-4">
+        <img id="iconImage" src="" alt="ikon utuh" class="max-w-xs mb-4 rounded-lg border"/>
+        <div id="iconDesc" class="bg-blue-50 rounded-lg p-4 text-sm text-gray-800 mb-4"></div>
+        <button id="btnToAssemble" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Cocokkan Bentuk</button>
+      </div>
+
+      <!-- ==== BAGIAN 2: ASSEMBLY / DRAG & DROP ==== -->
+      <div id="assemblyArea" class="hidden">
+        <div class="outline mb-4" id="outline">
+          <img id="outlineImage" src="" alt="ikon panduan">
+        </div>
+        <div class="controls flex justify-center gap-3 mt-4">
+          <button id="btnReset" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">🔄 Reset</button>
+          <button id="btnCheck" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">✔️ Periksa</button>
+        </div>
+        <div id="result" class="msg hidden"></div>
+      </div>
+
+      <!-- ==== POTONGAN ==== -->
+      <div id="pieces" class="hidden mt-4">
+        <strong class="block mb-2">Potongan Bangun</strong>
+        <div id="piecesList" class="flex flex-col gap-2"></div>
+      </div>
+
+      <!-- ==== BAGIAN 3: SOAL VOLUME ==== -->
+      <div id="part3" class="hidden mt-6">
+        <div class="flex flex-col md:flex-row gap-4 items-start">
+          <img id="part3Image" src="" alt="Potongan Bangun Ruang" class="max-w-xs rounded-lg border"/>
+          <div class="flex-1">
+            <div class="bg-blue-50 rounded-lg p-4 mb-3 text-sm text-gray-800" id="descPart3"></div>
+            <p id="soalPart3" class="font-semibold mb-2">Soal: Hitung volume tabung pada ikon ini!</p>
+            <input id="answerPart3" type="number" step="0.001" class="w-full border rounded-lg p-2" placeholder="Masukkan jawaban">
+          </div>
+        </div>
+        <div class="mt-4 flex justify-center gap-3">
+          <button id="btnSubmitPart3" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">✔️ Periksa Jawaban</button>
+          <button id="exitGameBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">❌ Keluar Game</button>
+        </div>
+        <div id="resultPart3" class="msg hidden mt-3"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==== FOOTER ==== -->
+  <footer class="bg-white border-t border-gray-200 py-4 px-6 text-center">
+    <p class="text-sm text-gray-600">Versi Profesional • Tim Mahasiswa • Untuk KKLP</p>
+  </footer>
+
+  <!-- ==== SCRIPT ==== -->
+  <script>
+    // ==== DATA IKON ====
+    // Semua ikon yang bisa dipilih pemain
+    const icons = [
+      { id: 'tugu-pena', name: 'Tugu Pena', description: 'Monumen pena sebagai simbol pendidikan dan kemajuan', image: 'tugu-pena.png' },
+      { id: 'Menara Air', name: 'Menara Air', description: 'Menara tinggi dengan arsitektur modern', image: 'tugu-pena1.png' }
+    ];
+
+    // ==== ELEMENTS ====
+    const homePage = document.getElementById('homePage');
+    const levelPage = document.getElementById('levelPage');
+    const gamePage = document.getElementById('gamePage');
+    const levelImage = document.getElementById('levelImage');
+    const levelTitle = document.getElementById('levelTitle');
+    const levelDesc = document.getElementById('levelDesc');
+    const backBtn = document.getElementById('backBtn');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const iconImage = document.getElementById('iconImage');
+    const iconDesc = document.getElementById('iconDesc');
+    const outlineImage = document.getElementById('outlineImage');
+    const piecesList = document.getElementById('piecesList');
+    const btnToAssemble = document.getElementById('btnToAssemble');
+    const iconView = document.getElementById('iconView');
+    const assemblyArea = document.getElementById('assemblyArea');
+    const piecesDiv = document.getElementById('pieces');
+    const btnReset = document.getElementById('btnReset');
+    const btnCheck = document.getElementById('btnCheck');
+    const result = document.getElementById('result');
+    const part3 = document.getElementById('part3');
+    const btnSubmitPart3 = document.getElementById('btnSubmitPart3');
+    const exitGameBtn = document.getElementById('exitGameBtn');
+    const answerPart3 = document.getElementById('answerPart3');
+    const resultPart3 = document.getElementById('resultPart3');
+    const descPart3 = document.getElementById('descPart3');
+    const part3Image = document.getElementById('part3Image');
+    const grid = document.getElementById('icon-grid');
+    const outline = document.getElementById('outline');
+
+    // ==== GRID IKON HOME PAGE ====
+    icons.forEach(icon => {
+      const card = document.createElement('div');
+      card.className = 'border rounded-lg overflow-hidden shadow hover:shadow-md transition cursor-pointer';
+      card.innerHTML = `
+        <img src="${icon.image}" class="h-96 w-full object-cover"/>
+        <div class="p-3">
+          <h3 class="font-semibold text-gray-900">${icon.name}</h3>
+          <p class="text-sm text-gray-600 mb-2">${icon.description}</p>
+          <button class="start-btn px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700" data-id="${icon.id}">Mulai →</button>
+        </div>`;
+      grid.appendChild(card);
+    });
+
+    // ==== EVENT HALAMAN (Navigasi) ====
+    document.addEventListener('click', e => {
+      if(e.target.classList.contains('start-btn')){
+        const id = e.target.getAttribute('data-id');
+        const selected = icons.find(i => i.id === id);
+        levelImage.src = selected.image;
+        levelTitle.textContent = selected.name;
+        levelDesc.textContent = selected.description;
+        levelPage.dataset.selectedId = id;
+        homePage.classList.add('hidden');
+        levelPage.classList.remove('hidden');
+      }
+    });
+
+    backBtn.onclick = () => { levelPage.classList.add('hidden'); homePage.classList.remove('hidden'); };
+    startGameBtn.onclick = () => {
+      const id = levelPage.dataset.selectedId;
+      const selected = icons.find(i => i.id === id);
+      iconImage.src = selected.image;
+      outlineImage.src = selected.image;
+      part3Image.src = selected.image;
+      iconDesc.innerHTML = `<h3 class="font-semibold text-blue-700 mb-2">${selected.name}</h3><p>${selected.description}</p>`;
+      levelPage.classList.add('hidden');
+      gamePage.classList.remove('hidden');
+      resetGame();
+      setupPieces();
+    };
+    exitGameBtn.onclick = () => { gamePage.classList.add('hidden'); levelPage.classList.remove('hidden'); resetGame(); };
+
+    // ==== LEVEL & POTONGAN (Bagian 2) ====
+    const curLevel = {
+      shapes:["tabung","kerucut"],
+      slotPositions:[ {shape:"tabung", top:50, left:90}, {shape:"kerucut", top:180, left:95} ]
+    };
+
+    function setupPieces(){
+      // Bersihkan slot & potongan lama
+      piecesList.innerHTML='';
+      document.querySelectorAll('#outline .slot').forEach(s=>s.remove());
+
+      // Buat slot
+      curLevel.slotPositions.forEach(s=>{
+        const slot=document.createElement('div');
+        slot.className='slot';
+        slot.dataset.shape=s.shape;
+        slot.style.top=s.top+'px';
+        slot.style.left=s.left+'px';
+        outline.appendChild(slot);
+      });
+
+      // Buat potongan
+      curLevel.shapes.forEach(s=>{
+        const p=document.createElement('div');
+        p.className='piece';
+        p.innerText=s;
+        p.dataset.shape=s;
+        p.draggable=true;
+        piecesList.appendChild(p);
+        p.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', s); });
+      });
+    }
+
+    // ==== DRAG & DROP ====
+    outline.addEventListener('dragover', e=>e.preventDefault());
+    outline.addEventListener('drop', e=>{
+      const shape=e.dataTransfer.getData('text/plain');
+      const slot=e.target.closest('.slot');
+      if(!slot) return;
+      if(slot.querySelector('.piece')) return;
+      const piece=document.querySelector(`.piece[data-shape='${shape}']`);
+      if(piece) slot.appendChild(piece);
+    });
+
+    // ==== TOMBOL ASSEMBLE (Bagian 1 → 2) ====
+    btnToAssemble.onclick = () => {
+      iconView.classList.add('hidden');
+      assemblyArea.classList.remove('hidden');
+      piecesDiv.classList.remove('hidden');
+    };
+
+    // ==== TOMBOL RESET ====
+    btnReset.onclick = () => setupPieces();
+
+    // ==== TOMBOL PERIKSA (Bagian 2 → Bagian 3) ====
+    btnCheck.onclick = () => {
+      let ok=true;
+      outline.querySelectorAll('.slot').forEach(slot=>{
+        const piece=slot.querySelector('.piece');
+        if(!piece||piece.dataset.shape!==slot.dataset.shape){ ok=false; }
+      });
+      if(!ok){
+        result.className='msg error';
+        result.textContent='Potongan belum sesuai! Susun kembali.';
+        result.classList.remove('hidden');
+        setupPieces();
+        return;
+      }
+      result.className='msg success';
+      result.textContent='Potongan sesuai! Lanjut ke soal volume.';
+      result.classList.remove('hidden');
+
+      assemblyArea.classList.add('hidden'); // hide Bagian 2
+      part3.classList.remove('hidden');     // show Bagian 3
+      generateRandomTabung();
+    };
+
+    // ==== SOAL VOLUME (Bagian 3) ====
+    const tabungSoal=[];
+    for(let i=0;i<10;i++){
+      let r; do{r=Math.floor(Math.random()*15)+1;}while(r%7===0);
+      const t=Math.floor(Math.random()*20)+5;
+      tabungSoal.push({r,t});
+    }
+    function generateRandomTabung(){
+      const idx=Math.floor(Math.random()*tabungSoal.length);
+      const {r,t}=tabungSoal[idx];
+      descPart3.innerHTML=`Tabung adalah bangun ruang dengan alas berbentuk lingkaran. Volume V=π×r²×t. Misalnya tinggi t=${t} cm dan jari-jari r=${r} cm.`;
+      answerPart3.value='';
+      answerPart3.dataset.expected=(3.14*r*r*t).toFixed(2);
+    }
+    btnSubmitPart3.onclick = () => {
+      const ans=parseFloat(answerPart3.value);
+      const expected=parseFloat(answerPart3.dataset.expected);
+      const tol=Math.max(0.01, Math.abs(expected*0.03));
+      if(Math.abs(ans-expected)<=tol){
+        resultPart3.className='msg success';
+        resultPart3.textContent='Jawaban benar!';
+      } else {
+        resultPart3.className='msg error';
+        resultPart3.textContent='Jawaban belum tepat, coba lagi.';
+      }
+      resultPart3.classList.remove('hidden');
+    };
+
+    // ==== RESET GAME ====
+    function resetGame(){
+      iconView.classList.remove('hidden');
+      assemblyArea.classList.add('hidden');
+      piecesDiv.classList.add('hidden');
+      part3.classList.add('hidden');
+      result.classList.add('hidden');
+      resultPart3.classList.add('hidden');
+    }
+  </script>
 </body>
 </html>
-
-
-
